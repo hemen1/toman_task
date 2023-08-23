@@ -1,0 +1,93 @@
+{
+	"info": {
+		"_postman_id": "8ae5568f-a291-4192-8af5-1cafcdab76a2",
+		"name": "toman_task",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "11279577"
+	},
+	"item": [
+		{
+			"name": "http://localhost:8000/transfer/wallet//wallet-balances/",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8000/transfer/wallet/3/wallet-balances/",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"transfer",
+						"wallet",
+						"3",
+						"wallet-balances",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "http://localhost:8000/transfer/transaction/",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"source_wallet_id\": 3,\n    \"destination_wallet_id\": 6,\n    \"amount\": 31654061,\n    \"tracker_id\": \"8ae14574-3c3a-11ee-8f15-36a99729fsd5\",\n    \"source_user_id\": 3,\n    \"destination_user_id\": 5\n  }",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8000/transfer/transaction/",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"transfer",
+						"transaction",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "http://localhost:8000/transfer/transaction/",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"source_wallet_id\": 3,\n    \"destination_wallet_id\": 6,\n    \"amount\": 4040461,\n    \"tracker_id\": \"8ae14574-3c3a-11ee-86a99729fa25\",\n    \"source_user_id\": 3,\n    \"destination_user_id\": 5,\n    \"crontab_schedule\": \"*/1 * * * *\"\n  }",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8000/transfer/schedule/",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"transfer",
+						"schedule",
+						""
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
