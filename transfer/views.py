@@ -8,7 +8,7 @@ from rest_framework import status
 from django_celery_beat.models import PeriodicTask, CrontabSchedule
 
 from .models import Wallet, Transactions
-from .serializers import TransactionSerializer, ScheduleTransactionSerializer
+from .serializers import TransactionSerializer, ScheduleTransactionSerializer,WalletSerializer
 
 
 def convert_to_schedule(cron_char):
@@ -42,11 +42,9 @@ class TransactionCreateView(generics.CreateAPIView):
         return Response(data={"transaction_status": transaction.get_status_display()}, status=status.HTTP_201_CREATED)
 
 
-class WalletBalanceView(APIView):
-    def get(self, request, wallet_id):
-        wallet = get_object_or_404(Wallet, id=wallet_id)
-        return Response({"wallet_id": wallet.id, "balance": wallet.balance}, status=status.HTTP_200_OK)
-
+class WalletBalanceView(generics.RetrieveAPIView):
+    queryset = Wallet.objects.all()
+    serializer_class = WalletSerializer
 
 class ScheduleTransactionCreateView(generics.CreateAPIView):
     queryset = Transactions.objects.all()

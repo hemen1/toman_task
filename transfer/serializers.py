@@ -8,6 +8,11 @@ from django.db.transaction import atomic
 from django.db.models import Case, When, Value, BooleanField, F, Q
 from cron_validator import CronValidator
 
+class WalletSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Wallet
+        fields = ['user','balance']
+
 
 class TransactionSerializer(serializers.Serializer):
     source_user_id = serializers.IntegerField()
