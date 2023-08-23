@@ -1,12 +1,14 @@
 from django.db import models
+from django.contrib.auth.models import AbstractUser
 
-class User(models.Model):
-    name = models.CharField(max_length=20)
+
+class CustomUserModel(AbstractUser):
+    pass
 
 
 class Wallet(models.Model):
-    user = models.ForeignKey(to=User, on_delete=models.CASCADE)
-    balance = models.DecimalField(default=0,max_digits=18,decimal_places=0)
+    user = models.ForeignKey(to=CustomUserModel, on_delete=models.CASCADE)
+    balance = models.DecimalField(default=0, max_digits=18, decimal_places=0)
 
 
 class Transactions(models.Model):

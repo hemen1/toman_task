@@ -8,10 +8,11 @@ from django.db.transaction import atomic
 from django.db.models import Case, When, Value, BooleanField, F, Q
 from cron_validator import CronValidator
 
+
 class WalletSerializer(serializers.ModelSerializer):
     class Meta:
         model = Wallet
-        fields = ['user','balance']
+        fields = ['user', 'balance']
 
 
 class TransactionSerializer(serializers.Serializer):
@@ -51,34 +52,38 @@ class TransactionSerializer(serializers.Serializer):
         try:
             with atomic():
                 # Deduct amount from source wallet
-                source_wallet = Wallet.objects.select_for_update().get(
+                affected_rows = Wallet.objects.filter(
                     user_id=validated_data['source_user_id'],
                     id=validated_data['source_wallet_id'],
                     balance__gte=amount
-                )
-                source_wallet.balance -= amount
-                source_wallet.save()
+                ).update(balance=F('balance') - amount)
+
+                # if there is Insufficient balance affected_rows will be 0
+                if affected_rows != 1:
+                    raise ValueError("Insufficient balance in the source wallet.")
+
                 # Add amount to destination wallet
                 Wallet.objects.select_for_update().filter(
                     user_id=validated_data['destination_user_id'],
                     id=validated_data['destination_wallet_id']).update(balance=F('balance') + amount)
-                # Create transaction instance
+
+
                 transaction_status = Transactions.Status.success
             # Log the successful transaction
             logger.info(f"Transaction successful - Tracker ID: {tracker_id}")
 
         except Exception as e:
             transaction_status = Transactions.Status.failed
+            # Log the failed transaction
             logger.error(f"Transaction failed - Tracker ID: {tracker_id}, Error: {str(e)}")
 
-        transaction = Transactions.objects.create(
+        # Create transaction instance
+        transaction = Transactions.objects.filter(tracker_id=tracker_id).update(
             source_wallet=source_wallet,
             destination_wallet=destination_wallet,
             amount=amount,
-            tracker_id=tracker_id,
             status=transaction_status
         )
-        # Log the failed transaction
 
         return transaction
 
