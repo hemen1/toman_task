@@ -3,8 +3,8 @@ from rest_framework.response import Response
 from rest_framework import status
 from django_celery_beat.models import PeriodicTask, CrontabSchedule
 
-from .models import Wallet, Transactions
-from .serializers import TransactionSerializer, ScheduleTransactionSerializer,WalletSerializer
+from .models import Wallet, Transactions, TrackerId
+from .serializers import TransactionSerializer, ScheduleTransactionSerializer, WalletSerializer
 
 
 def convert_to_schedule(cron_char):
@@ -25,15 +25,8 @@ class TransactionCreateView(generics.CreateAPIView):
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
-
         serializer.is_valid(raise_exception=True)
-        tracker_id = serializer.validated_data['tracker_id']
-        # Check if tracker_id already exists in Transactions
-        if Transactions.objects.filter(tracker_id=tracker_id).exists():
-            return Response(
-                {"error": "Duplicate tracker ID. This transaction already exists."},
-                status=status.HTTP_409_CONFLICT
-            )
+
         transaction: Transactions = serializer.save()
         return Response(data={"transaction_status": transaction.get_status_display()}, status=status.HTTP_201_CREATED)
 
@@ -41,6 +34,7 @@ class TransactionCreateView(generics.CreateAPIView):
 class WalletBalanceView(generics.RetrieveAPIView):
     queryset = Wallet.objects.all()
     serializer_class = WalletSerializer
+
 
 class ScheduleTransactionCreateView(generics.CreateAPIView):
     queryset = Transactions.objects.all()
