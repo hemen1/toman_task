@@ -3,7 +3,7 @@ import logging
 from rest_framework import serializers
 from rest_framework.renderers import JSONRenderer
 
-from .models import Wallet, Transactions, TrackerId
+from .models import Wallet, Transactions
 from django.db.transaction import atomic
 from django.db.models import Case, When, Value, BooleanField, F, Q
 from cron_validator import CronValidator
@@ -22,13 +22,6 @@ class TransactionSerializer(serializers.Serializer):
     destination_wallet_id = serializers.IntegerField()
     amount = serializers.DecimalField(max_digits=18, decimal_places=0, default=0)
     tracker_id = serializers.CharField()
-
-    def validate_traker_id(self, tracker_id):
-        # Check if tracker_id already exists in Transactions
-        tracker_obj, created = TrackerId.objects.get_or_create(tracker_id=tracker_id)
-        if not created:
-            raise serializers.ValidationError("Duplicate tracker ID. This transaction already exists.")
-        return tracker_id
 
     def validate(self, data):
         if data['source_wallet_id'] == data['destination_wallet_id']:
@@ -52,11 +45,7 @@ class TransactionSerializer(serializers.Serializer):
         logger = logging.getLogger('transaction_logger')
         amount = validated_data['amount']
         tracker_id = validated_data['tracker_id']
-        source_wallet = Wallet.objects.filter(user_id=validated_data['source_user_id'],
-                                              id=validated_data['source_wallet_id']).first()
-        destination_wallet = Wallet.objects.filter(user_id=validated_data['destination_user_id'],
-                                                   id=validated_data[
-                                                       'destination_wallet_id']).first()
+
         try:
             with atomic():
                 # Deduct amount from source wallet
@@ -71,7 +60,7 @@ class TransactionSerializer(serializers.Serializer):
                     raise ValueError("Insufficient balance in the source wallet.")
 
                 # Add amount to destination wallet
-                Wallet.objects.select_for_update().filter(
+                Wallet.objects.filter(
                     user_id=validated_data['destination_user_id'],
                     id=validated_data['destination_wallet_id']).update(balance=F('balance') + amount)
 
@@ -85,14 +74,7 @@ class TransactionSerializer(serializers.Serializer):
             logger.error(f"Transaction failed - Tracker ID: {tracker_id}, Error: {str(e)}")
 
         # Create transaction instance
-        transaction = Transactions.objects.create(
-            source_wallet=source_wallet,
-            destination_wallet=destination_wallet,
-            amount=amount,
-            tracker_fk=TrackerId.objects.get(tracker_id=tracker_id).id,
-            status=transaction_status
-        )
-
+        transaction = Transactions.objects.filter(tracker_id=tracker_id).update(status=transaction_status)
         return transaction
 
 

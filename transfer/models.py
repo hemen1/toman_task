@@ -11,20 +11,17 @@ class Wallet(models.Model):
     balance = models.DecimalField(default=0, max_digits=18, decimal_places=0)
 
 
-class TrackerId(models.Model):
-    tracker_id = models.CharField(max_length=32, db_index=True)
-
-
 class Transactions(models.Model):
     class Status(models.IntegerChoices):
         pending = 0
-        failed = 1
-        success = 2
+        in_progress = 1
+        failed = 2
+        success = 3
 
     source_wallet = models.ForeignKey(to=Wallet, on_delete=models.CASCADE, related_name='source_transactions')
     destination_wallet = models.ForeignKey(to=Wallet, on_delete=models.CASCADE, related_name='destination_transactions')
     amount = models.DecimalField(max_digits=18, decimal_places=0, default=0)
     status = models.IntegerField(choices=Status.choices, default=Status.pending)
-    tracker_fk = models.ForeignKey(to=TrackerId, on_delete=models.CASCADE)
+    tracker_id = models.CharField(max_length=32, db_index=True, unique=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

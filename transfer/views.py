@@ -26,7 +26,7 @@ class TransactionCreateView(generics.CreateAPIView):
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-
+        Transactions.objects.create(serializer.validated_data)
         transaction: Transactions = serializer.save()
         return Response(data={"transaction_status": transaction.get_status_display()}, status=status.HTTP_201_CREATED)
 
@@ -43,13 +43,7 @@ class ScheduleTransactionCreateView(generics.CreateAPIView):
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        tracker_id = serializer.validated_data['tracker_id']
-        # Check if tracker_id already exists in Transactions
-        if Transactions.objects.filter(tracker_id=tracker_id).exists():
-            return Response(
-                {"error": "Duplicate tracker ID. This transaction already exists."},
-                status=status.HTTP_409_CONFLICT
-            )
+
         cron_schedule = convert_to_schedule(serializer.validated_data['crontab_schedule'])
         task = PeriodicTask.objects.create(
             task='transfer.tasks.process_periodic_transaction',
